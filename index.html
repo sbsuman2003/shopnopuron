@@ -148,6 +148,14 @@
   .thumbs{display:flex;gap:8px;margin-top:10px;overflow-x:auto;padding-bottom:4px}
   .thumb{width:62px;height:62px;object-fit:cover;border-radius:9px;cursor:pointer;border:2px solid transparent;flex-shrink:0}
   .thumb.on{border-color:var(--orange)}
+  .brandtag{background:var(--navy)!important;color:#fff!important;border-color:var(--navy)!important;font-weight:700}
+  .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:9px;margin-bottom:6px;-webkit-overflow-scrolling:touch}
+  .chips::-webkit-scrollbar{height:5px}
+  .chips::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px}
+  .chip{flex-shrink:0;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:30px;padding:8px 15px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.15s;box-shadow:var(--shadow)}
+  .chip:hover{border-color:var(--navy)}
+  .chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .chip.q.on{background:var(--orange);border-color:var(--orange)}
   @media(max-width:860px){.hero-grid{grid-template-columns:1fr}.feat{grid-template-columns:1fr 1fr}.hero h1{font-size:32px}.fgrid{grid-template-columns:1fr}}
   @media(max-width:560px){.stats{grid-template-columns:1fr}.steps,.tgrid{grid-template-columns:1fr}.feat{grid-template-columns:1fr 1fr}.sell{padding:30px 20px}.hero h1{font-size:28px}.row2{grid-template-columns:1fr}}
 </style>
@@ -205,11 +213,13 @@
   <div class="shop-top">
     <div><div class="sectitle">In Stock</div><h2 style="font-size:28px;letter-spacing:-.6px">Available Phones</h2></div>
     <div class="controls">
-      <input id="search" placeholder="🔎 Search model…" style="min-width:150px">
+      <input id="search" placeholder="🔎 Search model…" style="min-width:140px">
       <select id="sortSel"><option value="feat">Featured</option><option value="plh">Price: Low → High</option><option value="phl">Price: High → Low</option><option value="bat">Best Battery</option><option value="save">Biggest Saving</option></select>
       <button class="btn btn-ghost" id="resetBtn">Reset</button>
     </div>
   </div>
+  <div class="chips" id="brandChips"></div>
+  <div class="chips" id="quickChips"></div>
   <div class="grid" id="grid"><div class="empty">Loading phones…</div></div>
 </section>
 
@@ -281,6 +291,44 @@ else { sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON); }
 document.getElementById('yr').textContent=new Date().getFullYear();
 
 function money(n){return '₹'+Number(n||0).toLocaleString('en-IN')}
+const BRANDS=['Apple','Asus','Google','Honor','HTC','Huawei','Infinix','iQOO','Lava','Lenovo','LG','Micromax','Motorola','Nokia','Nothing','OnePlus','Oppo','Poco','Realme','Samsung','Sony','Tecno','Vivo','Xiaomi','ZTE','Other'];
+const CONDS=['Sealed Pack','Open Box','Excellent','Like New','Good','Fair'];
+function metaHtml(p){
+  const m=[];
+  if(p.brand)m.push('<span class="brandtag">'+p.brand+'</span>');
+  if(p.storage)m.push('<span>'+p.storage+'</span>');
+  if(p.color)m.push('<span>'+p.color+'</span>');
+  if(p.network)m.push('<span>'+p.network+'</span>');
+  if(p.battery)m.push('<span class="bat">🔋 '+p.battery+'%</span>');
+  if(p.age)m.push('<span>⏳ '+p.age+'</span>');
+  if(p.cond)m.push('<span>'+p.cond+'</span>');
+  return m.join('');
+}
+let curBrand='all', curQuick='';
+const QUICKS=[
+ {k:'offer',  label:'🔥 Offer Mode',   f:p=>p.was&&p.was>p.price},
+ {k:'sealed', label:'📦 Sealed Pack',  f:p=>p.cond==='Sealed Pack'},
+ {k:'openbox',label:'📬 Open Box',     f:p=>p.cond==='Open Box'},
+ {k:'u5',     label:'₹ Below 5k',      f:p=>p.price>0&&p.price<5000},
+ {k:'u10',    label:'₹ Below 10k',     f:p=>p.price>0&&p.price<10000},
+ {k:'u15',    label:'₹ Below 15k',     f:p=>p.price>0&&p.price<15000},
+ {k:'4g',     label:'📶 4G Phones',    f:p=>p.network==='4G'},
+ {k:'5g',     label:'📡 5G Phones',    f:p=>p.network==='5G'},
+ {k:'flag',   label:'⭐ Flagship',     f:p=>p.feat},
+ {k:'bat85',  label:'🔋 Battery 85%+', f:p=>p.battery>=85},
+];
+function renderBrandChips(){
+  const el=document.getElementById('brandChips');if(!el)return;
+  const set=[...new Set(phones.map(p=>p.brand).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const items=[{v:'all',t:'All'}].concat(set.map(b=>({v:b,t:b})));
+  el.innerHTML=items.map(i=>'<div class="chip'+(curBrand===i.v?' on':'')+'" data-b="'+i.v+'">'+i.t+'</div>').join('');
+  el.querySelectorAll('[data-b]').forEach(c=>c.onclick=()=>{curBrand=c.dataset.b;renderBrandChips();render();});
+}
+function renderQuickChips(){
+  const el=document.getElementById('quickChips');if(!el)return;
+  el.innerHTML=QUICKS.map(q=>'<div class="chip q'+(curQuick===q.k?' on':'')+'" data-q="'+q.k+'">'+q.label+'</div>').join('');
+  el.querySelectorAll('[data-q]').forEach(c=>c.onclick=()=>{curQuick=curQuick===c.dataset.q?'':c.dataset.q;renderQuickChips();render();});
+}
 function waLink(t){return 'https://wa.me/'+settings.wa+'?text='+encodeURIComponent(t)}
 function telLink(){return 'tel:'+settings.phone}
 function refreshLinks(){
@@ -330,8 +378,8 @@ function openDetail(id){
   document.getElementById('phoneBody').innerHTML=
     '<div style="text-align:right;margin:-8px -6px 0 0"><button class="x" onclick="closeM(\'phoneModal\')">×</button></div>'+
     main+thumbs+
-    '<h2 style="font-size:22px;margin:14px 0 8px;display:block">'+p.model+'</h2>'+
-    '<div class="meta" style="margin-bottom:12px"><span>'+(p.storage||'—')+'</span><span>'+(p.color||'—')+'</span><span class="bat">🔋 '+(p.battery||'—')+'%</span><span>'+(p.cond||'')+'</span></div>'+
+    '<h2 style="font-size:22px;margin:14px 0 8px;display:block">'+(p.brand?p.brand+' ':'')+p.model+'</h2>'+
+    '<div class="meta" style="margin-bottom:12px">'+metaHtml(p)+'</div>'+
     '<div class="price" style="margin-bottom:18px"><span class="now">'+money(p.price)+'</span>'+(p.was?'<span class="was">'+money(p.was)+'</span>':'')+'</div>'+
     act+
     '<div style="font-size:12px;color:var(--mut);text-align:center;margin-top:10px">Visit the store to test before you pay.</div>';
@@ -343,7 +391,9 @@ function openDetail(id){
 function render(){
   const q=document.getElementById('search').value.toLowerCase();
   const sort=document.getElementById('sortSel').value;
-  let list=phones.filter(p=>((p.model||'')+' '+(p.color||'')).toLowerCase().includes(q));
+  let list=phones.filter(p=>((p.brand||'')+' '+(p.model||'')+' '+(p.color||'')).toLowerCase().includes(q));
+  if(curBrand!=='all')list=list.filter(p=>(p.brand||'')===curBrand);
+  if(curQuick){const qf=QUICKS.find(x=>x.k===curQuick);if(qf)list=list.filter(qf.f);}
   if(sort==='plh')list.sort((a,b)=>a.price-b.price);
   else if(sort==='phl')list.sort((a,b)=>b.price-a.price);
   else if(sort==='bat')list.sort((a,b)=>b.battery-a.battery);
@@ -360,7 +410,7 @@ function render(){
     const msg="Hi ShopnoPurON, I'd like to reserve this phone:\n"+p.model+' '+(p.storage||'')+' ('+(p.color||'')+')\nPrice: '+money(p.price);
     const act=p.sold?'<button class="btn btn-ghost" disabled style="opacity:.5">Sold Out</button>':'<a class="btn btn-wa" data-stop href="'+waLink(msg)+'">Reserve on WhatsApp</a>';
     return '<div class="p" data-card="'+p.id+'"><div class="img">'+saving+sold+cnt+img+'</div><div class="body">'+
-      '<h3>'+p.model+'</h3><div class="meta"><span>'+(p.storage||'—')+'</span><span>'+(p.color||'—')+'</span><span class="bat">🔋 '+(p.battery||'—')+'%</span><span>'+(p.cond||'')+'</span></div>'+
+      '<h3>'+p.model+'</h3><div class="meta">'+metaHtml(p)+'</div>'+
       '<div class="price"><span class="now">'+money(p.price)+'</span>'+(p.was?'<span class="was">'+money(p.was)+'</span>':'')+'</div>'+
       '<div class="act">'+act+'</div></div></div>';
   }).join('');
@@ -368,13 +418,14 @@ function render(){
 }
 document.getElementById('search').addEventListener('input',render);
 document.getElementById('sortSel').addEventListener('change',render);
-document.getElementById('resetBtn').addEventListener('click',()=>{document.getElementById('search').value='';document.getElementById('sortSel').value='feat';render()});
+document.getElementById('resetBtn').addEventListener('click',()=>{document.getElementById('search').value='';document.getElementById('sortSel').value='feat';curBrand='all';curQuick='';renderBrandChips();renderQuickChips();render()});
 
 /* ---------- data load ---------- */
 async function loadAll(){
   if(!sb){document.getElementById('grid').innerHTML='<div class="empty">Store not configured yet.</div>';return}
   const {data:ph}=await sb.from('phones').select('*').order('id',{ascending:false});
   phones=ph||[];
+  renderBrandChips();renderQuickChips();
   const {data:st}=await sb.from('settings').select('*').eq('id',1).maybeSingle();
   if(st)settings=Object.assign({},defaults,{wa:st.wa,phone:st.phone,addr:st.addr});
   refreshLinks();render();
@@ -421,10 +472,12 @@ function renderAdmin(){
    '<div class="field"><label>Store address</label><input id="sAddr" value="'+(settings.addr||'')+'"></div>'+
    '<button class="btn btn-navy mini" id="saveSet">Save Settings</button>'+
    '<hr><h3 style="font-size:15px;margin-bottom:10px">➕ Add a phone</h3>'+
-   '<div class="row2"><div class="field"><label>Model</label><input id="fModel" placeholder="iPhone 13"></div><div class="field"><label>Storage</label><input id="fStorage" placeholder="128GB"></div></div>'+
-   '<div class="row2"><div class="field"><label>Color</label><input id="fColor" placeholder="Black"></div><div class="field"><label>Battery %</label><input id="fBat" type="number" placeholder="90"></div></div>'+
-   '<div class="row2"><div class="field"><label>Condition</label><select id="fCond"><option>Like New</option><option>Excellent</option><option>Good</option></select></div><div class="field"><label>Price ₹</label><input id="fPrice" type="number" placeholder="35000"></div></div>'+
-   '<div class="row2"><div class="field"><label>Original price ₹ (optional)</label><input id="fWas" type="number" placeholder="45000"></div><div class="field"><label>&nbsp;</label><label style="font-size:12.5px;color:var(--mut);font-weight:500"><input type="checkbox" id="fFeat" style="width:auto"> Featured</label></div></div>'+
+   '<div class="row2"><div class="field"><label>Brand</label><select id="fBrand"><option value="">Select brand</option>'+BRANDS.map(b=>'<option>'+b+'</option>').join('')+'</select></div><div class="field"><label>Model</label><input id="fModel" placeholder="iPhone 13"></div></div>'+
+   '<div class="row2"><div class="field"><label>Storage</label><input id="fStorage" placeholder="128GB"></div><div class="field"><label>Colour</label><input id="fColor" placeholder="Black"></div></div>'+
+   '<div class="row2"><div class="field" id="fBatWrap" style="display:none"><label>Battery % (Apple only)</label><input id="fBat" type="number" placeholder="90"></div><div class="field"><label>Device age</label><input id="fAge" placeholder="e.g. 6 months"></div></div>'+
+   '<div class="row2"><div class="field"><label>Network</label><select id="fNet"><option value="">—</option><option>4G</option><option>5G</option></select></div><div class="field"><label>Condition</label><select id="fCond">'+CONDS.map(c=>'<option>'+c+'</option>').join('')+'</select></div></div>'+
+   '<div class="row2"><div class="field"><label>Price ₹</label><input id="fPrice" type="number" placeholder="35000"></div><div class="field"><label>Original price ₹ (optional)</label><input id="fWas" type="number" placeholder="45000"></div></div>'+
+   '<div class="row2"><div class="field"><label>&nbsp;</label><label style="font-size:12.5px;color:var(--mut);font-weight:500"><input type="checkbox" id="fFeat" style="width:auto"> Flagship / Featured</label></div><div class="field"></div></div>'+
    '<div class="field"><label>Photos (up to 6 — auto-shrunk under 2 MB)</label><input id="fPhotos" type="file" accept="image/*" multiple></div>'+
    '<button class="btn btn-brand mini" id="addP">Add Phone</button>'+
    '<div style="font-size:11.5px;color:var(--mut);margin-top:6px">You can also add more photos later with 📷 in the list below.</div>'+
@@ -432,6 +485,7 @@ function renderAdmin(){
   document.getElementById('logoutBtn').onclick=async()=>{await sb.auth.signOut();session=null;renderLogin();};
   document.getElementById('saveSet').onclick=saveSettings;
   document.getElementById('addP').onclick=addPhone;
+  document.getElementById('fBrand').onchange=function(){document.getElementById('fBatWrap').style.display=this.value==='Apple'?'block':'none';};
   renderAdlist();
 }
 function renderAdlist(){
@@ -439,7 +493,7 @@ function renderAdlist(){
   el.innerHTML=phones.map(p=>{
     const gal=imgs(p);const th=gal[0]?('<img src="'+gal[0]+'">'):'📱';
     const pc=gal.length?(' • '+gal.length+'📷'):' • no photo';
-    return '<div class="adrow"><div class="th">'+th+'</div><div class="gi"><b>'+p.model+'</b> '+(p.storage||'')+' • '+money(p.price)+pc+(p.sold?' • <span style="color:var(--red)">SOLD</span>':'')+'</div>'+
+    return '<div class="adrow"><div class="th">'+th+'</div><div class="gi"><b>'+(p.brand?p.brand+' ':'')+p.model+'</b> '+(p.storage||'')+' • '+money(p.price)+pc+(p.sold?' • <span style="color:var(--red)">SOLD</span>':'')+'</div>'+
       '<button class="photobtn" data-ph="'+p.id+'">📷 Add</button>'+
       (gal.length?'<button class="btn btn-ghost mini" style="color:var(--red)" data-clr="'+p.id+'">✕</button>':'')+
       '<button class="btn btn-ghost mini" data-sold="'+p.id+'">'+(p.sold?'Un-sold':'Sold')+'</button>'+
@@ -461,8 +515,10 @@ async function saveSettings(){
 async function addPhone(){
   const model=document.getElementById('fModel').value.trim();
   if(!model){alert('Please enter a model');return}
-  const row={model,storage:document.getElementById('fStorage').value.trim(),color:document.getElementById('fColor').value.trim(),
-    battery:+document.getElementById('fBat').value||null,cond:document.getElementById('fCond').value,
+  const brand=document.getElementById('fBrand').value;
+  const row={brand:brand||null,model,storage:document.getElementById('fStorage').value.trim(),color:document.getElementById('fColor').value.trim(),
+    battery:brand==='Apple'?(+document.getElementById('fBat').value||null):null,
+    age:document.getElementById('fAge').value.trim()||null,network:document.getElementById('fNet').value||null,cond:document.getElementById('fCond').value,
     price:+document.getElementById('fPrice').value||0,was:+document.getElementById('fWas').value||null,
     img:'',sold:false,feat:document.getElementById('fFeat').checked};
   const files=document.getElementById('fPhotos').files;
