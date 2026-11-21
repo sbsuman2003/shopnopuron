@@ -141,6 +141,13 @@
   .note{background:var(--navySoft);border:1px solid #d4e2f3;border-radius:12px;padding:13px;font-size:12.5px;color:var(--navy);margin:8px 0 16px}
   hr{border:none;border-top:1px solid var(--line);margin:20px 0}
   .photobtn{font-size:11px;padding:6px 9px;border-radius:8px;background:var(--orangeSoft);color:var(--orange);border:none;cursor:pointer;font-weight:600}
+  .p{cursor:pointer}
+  .imgcount{position:absolute;bottom:10px;right:10px;background:rgba(11,61,107,.85);color:#fff;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:7px}
+  .galmain{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;background:var(--navySoft)}
+  .galempty{display:flex;align-items:center;justify-content:center;font-size:70px}
+  .thumbs{display:flex;gap:8px;margin-top:10px;overflow-x:auto;padding-bottom:4px}
+  .thumb{width:62px;height:62px;object-fit:cover;border-radius:9px;cursor:pointer;border:2px solid transparent;flex-shrink:0}
+  .thumb.on{border-color:var(--orange)}
   @media(max-width:860px){.hero-grid{grid-template-columns:1fr}.feat{grid-template-columns:1fr 1fr}.hero h1{font-size:32px}.fgrid{grid-template-columns:1fr}}
   @media(max-width:560px){.stats{grid-template-columns:1fr}.steps,.tgrid{grid-template-columns:1fr}.feat{grid-template-columns:1fr 1fr}.sell{padding:30px 20px}.hero h1{font-size:28px}.row2{grid-template-columns:1fr}}
 </style>
@@ -259,7 +266,9 @@
   <div id="adminBody"></div>
 </div></div>
 
-<input type="file" id="hiddenPhoto" accept="image/*" style="display:none">
+<div class="modal" id="phoneModal"><div class="sheet" style="max-width:520px"><div id="phoneBody"></div></div></div>
+
+<input type="file" id="hiddenPhoto" accept="image/*" multiple style="display:none">
 
 <script>
 const BUCKET='phone-photos';
@@ -282,6 +291,54 @@ function refreshLinks(){
   document.getElementById('footAddr').textContent=settings.addr?('📍 '+settings.addr):'📍 Address coming soon';
 }
 
+/* ---------- images ---------- */
+const MAXMB=2;
+function imgs(p){return p&&p.img?String(p.img).split(',').map(s=>s.trim()).filter(Boolean):[]}
+function compress(file){return new Promise((res,rej)=>{
+  if(!file.type||!file.type.startsWith('image/')){rej(new Error('Not an image'));return;}
+  const im=new Image(),u=URL.createObjectURL(file);
+  im.onload=()=>{URL.revokeObjectURL(u);let w=im.width,h=im.height,M=1280;
+    if(w>M||h>M){const r=Math.min(M/w,M/h);w=Math.round(w*r);h=Math.round(h*r);}
+    const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);
+    const go=q=>c.toBlob(b=>{if(!b){rej(new Error('compress failed'));return;}
+      if(b.size>MAXMB*1048576&&q>0.4)go(q-0.15);else res(b);},'image/jpeg',q);
+    go(0.82);};
+  im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('Bad image'));};
+  im.src=u;});}
+async function uploadBlob(blob){
+  const path='p'+Date.now()+'_'+Math.random().toString(36).slice(2,8)+'.jpg';
+  const {error}=await sb.storage.from(BUCKET).upload(path,blob,{contentType:'image/jpeg',upsert:true});
+  if(error)throw error;
+  return sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;}
+async function uploadFiles(fileList,existing){
+  let urls=existing?existing.slice():[];
+  for(const f of Array.from(fileList)){
+    if(urls.length>=6){alert('Maximum 6 photos per phone.');break;}
+    try{const b=await compress(f);urls.push(await uploadBlob(b));}
+    catch(e){alert('Skipped one photo: '+(e.message||e));}
+  }
+  return urls;}
+
+/* ---------- product detail ---------- */
+function openDetail(id){
+  const p=phones.find(x=>x.id===id);if(!p)return;
+  const gal=imgs(p);
+  const main=gal.length?('<img id="galMain" src="'+gal[0]+'" class="galmain">'):'<div class="galmain galempty">📱</div>';
+  const thumbs=gal.length>1?('<div class="thumbs">'+gal.map((u,i)=>'<img src="'+u+'" class="thumb'+(i===0?' on':'')+'" data-src="'+u+'">').join('')+'</div>'):'';
+  const msg="Hi ShopnoPurON, I'd like to order this phone:\n"+p.model+' '+(p.storage||'')+' ('+(p.color||'')+')\nPrice: '+money(p.price);
+  const act=p.sold?'<button class="btn btn-ghost" disabled style="opacity:.5;width:100%;justify-content:center">Sold Out</button>':'<a class="btn btn-wa" style="width:100%;justify-content:center" href="'+waLink(msg)+'">Order on WhatsApp</a>';
+  document.getElementById('phoneBody').innerHTML=
+    '<div style="text-align:right;margin:-8px -6px 0 0"><button class="x" onclick="closeM(\'phoneModal\')">×</button></div>'+
+    main+thumbs+
+    '<h2 style="font-size:22px;margin:14px 0 8px;display:block">'+p.model+'</h2>'+
+    '<div class="meta" style="margin-bottom:12px"><span>'+(p.storage||'—')+'</span><span>'+(p.color||'—')+'</span><span class="bat">🔋 '+(p.battery||'—')+'%</span><span>'+(p.cond||'')+'</span></div>'+
+    '<div class="price" style="margin-bottom:18px"><span class="now">'+money(p.price)+'</span>'+(p.was?'<span class="was">'+money(p.was)+'</span>':'')+'</div>'+
+    act+
+    '<div style="font-size:12px;color:var(--mut);text-align:center;margin-top:10px">Visit the store to test before you pay.</div>';
+  document.querySelectorAll('#phoneBody .thumb').forEach(t=>t.onclick=()=>{document.getElementById('galMain').src=t.dataset.src;document.querySelectorAll('#phoneBody .thumb').forEach(x=>x.classList.remove('on'));t.classList.add('on');});
+  openM('phoneModal');
+}
+
 /* ---------- storefront ---------- */
 function render(){
   const q=document.getElementById('search').value.toLowerCase();
@@ -297,14 +354,17 @@ function render(){
   g.innerHTML=list.map(p=>{
     const saving=p.was&&p.was>p.price?('<span class="tag save">Save '+money(p.was-p.price)+'</span>'):'';
     const sold=p.sold?'<span class="tag sold">SOLD</span>':'';
-    const img=p.img?('<img src="'+p.img+'" alt="'+p.model+'">'):'📱';
+    const gal=imgs(p);const first=gal[0];
+    const img=first?('<img src="'+first+'" alt="'+p.model+'">'):'📱';
+    const cnt=gal.length>1?('<span class="imgcount">📷 '+gal.length+'</span>'):'';
     const msg="Hi ShopnoPurON, I'd like to reserve this phone:\n"+p.model+' '+(p.storage||'')+' ('+(p.color||'')+')\nPrice: '+money(p.price);
-    const act=p.sold?'<button class="btn btn-ghost" disabled style="opacity:.5">Sold Out</button>':'<a class="btn btn-wa" href="'+waLink(msg)+'">Reserve on WhatsApp</a>';
-    return '<div class="p"><div class="img">'+saving+sold+img+'</div><div class="body">'+
+    const act=p.sold?'<button class="btn btn-ghost" disabled style="opacity:.5">Sold Out</button>':'<a class="btn btn-wa" data-stop href="'+waLink(msg)+'">Reserve on WhatsApp</a>';
+    return '<div class="p" data-card="'+p.id+'"><div class="img">'+saving+sold+cnt+img+'</div><div class="body">'+
       '<h3>'+p.model+'</h3><div class="meta"><span>'+(p.storage||'—')+'</span><span>'+(p.color||'—')+'</span><span class="bat">🔋 '+(p.battery||'—')+'%</span><span>'+(p.cond||'')+'</span></div>'+
       '<div class="price"><span class="now">'+money(p.price)+'</span>'+(p.was?'<span class="was">'+money(p.was)+'</span>':'')+'</div>'+
       '<div class="act">'+act+'</div></div></div>';
   }).join('');
+  g.querySelectorAll('[data-card]').forEach(el=>el.onclick=e=>{if(e.target.closest('[data-stop]'))return;openDetail(+el.dataset.card);});
 }
 document.getElementById('search').addEventListener('input',render);
 document.getElementById('sortSel').addEventListener('change',render);
@@ -365,8 +425,9 @@ function renderAdmin(){
    '<div class="row2"><div class="field"><label>Color</label><input id="fColor" placeholder="Black"></div><div class="field"><label>Battery %</label><input id="fBat" type="number" placeholder="90"></div></div>'+
    '<div class="row2"><div class="field"><label>Condition</label><select id="fCond"><option>Like New</option><option>Excellent</option><option>Good</option></select></div><div class="field"><label>Price ₹</label><input id="fPrice" type="number" placeholder="35000"></div></div>'+
    '<div class="row2"><div class="field"><label>Original price ₹ (optional)</label><input id="fWas" type="number" placeholder="45000"></div><div class="field"><label>&nbsp;</label><label style="font-size:12.5px;color:var(--mut);font-weight:500"><input type="checkbox" id="fFeat" style="width:auto"> Featured</label></div></div>'+
+   '<div class="field"><label>Photos (up to 6 — auto-shrunk under 2 MB)</label><input id="fPhotos" type="file" accept="image/*" multiple></div>'+
    '<button class="btn btn-brand mini" id="addP">Add Phone</button>'+
-   '<div style="font-size:11.5px;color:var(--mut);margin-top:6px">After adding, tap 📷 in the list to upload its photo.</div>'+
+   '<div style="font-size:11.5px;color:var(--mut);margin-top:6px">You can also add more photos later with 📷 in the list below.</div>'+
    '<hr><h3 style="font-size:15px;margin-bottom:10px">📋 Current stock ('+phones.length+')</h3><div class="adlist" id="adlist"></div>';
   document.getElementById('logoutBtn').onclick=async()=>{await sb.auth.signOut();session=null;renderLogin();};
   document.getElementById('saveSet').onclick=saveSettings;
@@ -376,15 +437,18 @@ function renderAdmin(){
 function renderAdlist(){
   const el=document.getElementById('adlist');
   el.innerHTML=phones.map(p=>{
-    const th=p.img?('<img src="'+p.img+'">'):'📱';
-    return '<div class="adrow"><div class="th">'+th+'</div><div class="gi"><b>'+p.model+'</b> '+(p.storage||'')+' • '+money(p.price)+' • 🔋'+(p.battery||'—')+'%'+(p.sold?' • <span style="color:var(--red)">SOLD</span>':'')+'</div>'+
-      '<button class="photobtn" data-ph="'+p.id+'">📷</button>'+
+    const gal=imgs(p);const th=gal[0]?('<img src="'+gal[0]+'">'):'📱';
+    const pc=gal.length?(' • '+gal.length+'📷'):' • no photo';
+    return '<div class="adrow"><div class="th">'+th+'</div><div class="gi"><b>'+p.model+'</b> '+(p.storage||'')+' • '+money(p.price)+pc+(p.sold?' • <span style="color:var(--red)">SOLD</span>':'')+'</div>'+
+      '<button class="photobtn" data-ph="'+p.id+'">📷 Add</button>'+
+      (gal.length?'<button class="btn btn-ghost mini" style="color:var(--red)" data-clr="'+p.id+'">✕</button>':'')+
       '<button class="btn btn-ghost mini" data-sold="'+p.id+'">'+(p.sold?'Un-sold':'Sold')+'</button>'+
       '<button class="btn btn-ghost mini" style="color:var(--red)" data-del="'+p.id+'">Del</button></div>';
   }).join('')||'<div style="color:var(--mut);font-size:13px">No phones yet.</div>';
   el.querySelectorAll('[data-sold]').forEach(b=>b.onclick=()=>toggleSold(+b.dataset.sold));
   el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>delPhone(+b.dataset.del));
   el.querySelectorAll('[data-ph]').forEach(b=>b.onclick=()=>pickPhoto(+b.dataset.ph));
+  el.querySelectorAll('[data-clr]').forEach(b=>b.onclick=()=>clearPhotos(+b.dataset.clr));
 }
 async function saveSettings(){
   settings.wa=document.getElementById('sWa').value.trim()||defaults.wa;
@@ -401,9 +465,18 @@ async function addPhone(){
     battery:+document.getElementById('fBat').value||null,cond:document.getElementById('fCond').value,
     price:+document.getElementById('fPrice').value||0,was:+document.getElementById('fWas').value||null,
     img:'',sold:false,feat:document.getElementById('fFeat').checked};
-  const {error}=await sb.from('phones').insert(row);
-  if(error){alert('Add failed: '+error.message);return}
-  await loadAll();renderAdmin();
+  const files=document.getElementById('fPhotos').files;
+  const addBtn=document.getElementById('addP');const oldT=addBtn.textContent;
+  addBtn.textContent='Saving…';addBtn.disabled=true;
+  try{
+    const {data:ins,error}=await sb.from('phones').insert(row).select().single();
+    if(error)throw error;
+    if(files&&files.length){
+      const urls=await uploadFiles(files,[]);
+      if(urls.length){await sb.from('phones').update({img:urls.join(',')}).eq('id',ins.id);}
+    }
+    await loadAll();renderAdmin();
+  }catch(e){alert('Add failed: '+(e.message||e));addBtn.textContent=oldT;addBtn.disabled=false;}
 }
 async function toggleSold(id){
   const p=phones.find(x=>x.id===id);if(!p)return;
@@ -418,23 +491,27 @@ async function delPhone(id){
   await loadAll();renderAdmin();
 }
 
-/* ---------- photo upload ---------- */
+/* ---------- photo upload (append, multiple) ---------- */
 let pendingId=null;const hp=document.getElementById('hiddenPhoto');
 function pickPhoto(id){pendingId=id;hp.value='';hp.click();}
 hp.addEventListener('change',async()=>{
-  const f=hp.files&&hp.files[0];if(!f||pendingId==null)return;
-  const btn=document.querySelector('[data-ph="'+pendingId+'"]');if(btn)btn.textContent='⏳';
+  const files=hp.files;if(!files||!files.length||pendingId==null)return;
+  const btn=document.querySelector('[data-ph="'+pendingId+'"]');const old=btn?btn.textContent:'';if(btn)btn.textContent='⏳';
   try{
-    const path=pendingId+'_'+Date.now()+'_'+f.name.replace(/[^a-zA-Z0-9.]/g,'');
-    const {error:upErr}=await sb.storage.from(BUCKET).upload(path,f,{upsert:true});
-    if(upErr)throw upErr;
-    const {data}=sb.storage.from(BUCKET).getPublicUrl(path);
-    const {error}=await sb.from('phones').update({img:data.publicUrl}).eq('id',pendingId);
+    const p=phones.find(x=>x.id===pendingId);
+    const urls=await uploadFiles(files,imgs(p));
+    const {error}=await sb.from('phones').update({img:urls.join(',')}).eq('id',pendingId);
     if(error)throw error;
     await loadAll();renderAdlist();
-  }catch(e){alert('Upload failed: '+(e.message||e));if(btn)btn.textContent='📷';}
+  }catch(e){alert('Upload failed: '+(e.message||e));if(btn)btn.textContent=old||'📷 Add';}
   pendingId=null;
 });
+async function clearPhotos(id){
+  if(!confirm('Remove all photos of this phone?'))return;
+  const {error}=await sb.from('phones').update({img:''}).eq('id',id);
+  if(error){alert(error.message);return}
+  await loadAll();renderAdlist();
+}
 
 /* ---------- init ---------- */
 refreshLinks();
