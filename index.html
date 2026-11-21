@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b3d6b">
+<title>ShopnoPurON — Certified Pre-Owned Phones</title>
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  STEP A: paste your Supabase values between the quotes below  ║
+     ║  Find them in Supabase → Project Settings → API              ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<script>
+  const SUPABASE_URL  = "https://hcivmuvqbcfjehxdafvz.supabase.co";
+  const SUPABASE_ANON = "sb_publishable_WuyYSi9RO_0Pqiy6s1-KJw_oxhhBOCl";
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#f4f6fa;--surface:#fff;--line:#e4e8f0;--ink:#13233a;--mut:#64708a;
+    --navy:#0b3d6b;--navy2:#13518f;--orange:#f26a1b;--orangeSoft:#fff1e8;--navySoft:#eaf1fa;
+    --green:#1f9d4d;--amber:#f5a623;--red:#e11d48;--shadow:0 4px 20px rgba(20,40,80,.07);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 18px}
+  .btn{display:inline-flex;align-items:center;gap:7px;border:none;border-radius:11px;padding:12px 18px;font-size:14px;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
+  .btn:hover{transform:translateY(-1px)}
+  .btn-wa{background:var(--green);color:#fff}
+  .btn-call{background:var(--navySoft);color:var(--navy)}
+  .btn-brand{background:var(--orange);color:#fff;box-shadow:0 6px 18px rgba(242,106,27,.3)}
+  .btn-navy{background:var(--navy);color:#fff}
+  .btn-ghost{background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+  .sectitle{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);margin-bottom:8px}
+  .cfgwarn{background:#fff6e8;border-bottom:2px solid var(--amber);color:#8a5a00;font-size:13px;padding:10px 18px;text-align:center}
+  header{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .bar{display:flex;align-items:center;gap:12px;padding:10px 0;flex-wrap:wrap}
+  .brandlogo{height:42px;width:auto}
+  .logotext{font-weight:800;font-size:21px;letter-spacing:-.4px;color:var(--navy)}
+  .logotext span{color:var(--orange)}
+  .badge{font-size:10px;font-weight:800;background:var(--navy);color:#fff;padding:4px 9px;border-radius:20px;letter-spacing:.5px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px;box-shadow:0 0 0 3px rgba(31,157,77,.2)}
+  .open{font-size:12px;color:var(--mut);font-weight:500}
+  .spacer{flex:1}
+  .hero{padding:52px 0 38px}
+  .hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
+  .hero h1{font-size:40px;line-height:1.1;letter-spacing:-1px;margin-bottom:16px}
+  .hero h1 em{font-style:normal;color:var(--orange)}
+  .hero .lead{color:var(--mut);font-size:16px;max-width:480px;margin-bottom:22px}
+  .pills{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:26px}
+  .pill{font-size:12.5px;font-weight:600;background:var(--surface);border:1px solid var(--line);padding:8px 13px;border-radius:30px;box-shadow:var(--shadow)}
+  .pill b{color:var(--navy)}
+  .cta{display:flex;gap:12px;flex-wrap:wrap}
+  .hero-card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:26px;box-shadow:var(--shadow)}
+  .hero-card .big{font-size:15px;font-weight:700;margin-bottom:18px}
+  .checklist{display:flex;flex-direction:column;gap:13px}
+  .check{display:flex;gap:11px;align-items:flex-start;font-size:14px}
+  .check .ck{width:22px;height:22px;border-radius:50%;background:var(--navySoft);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+  .check small{display:block;color:var(--mut);font-size:12px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:8px 0 40px}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;text-align:center;box-shadow:var(--shadow)}
+  .stat .num{font-size:30px;font-weight:800;color:var(--navy);letter-spacing:-1px}
+  .stat .lbl{font-size:13px;color:var(--mut);margin-top:2px}
+  .sec{padding:44px 0}
+  .sec-head{text-align:center;margin-bottom:32px}
+  .sec-head h2{font-size:29px;letter-spacing:-.8px}
+  .sec-head p{color:var(--mut);margin-top:6px}
+  .feat{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .fcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:var(--shadow)}
+  .fcard .ic{width:44px;height:44px;border-radius:12px;background:var(--orangeSoft);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:12px}
+  .fcard h3{font-size:15px;margin-bottom:4px}
+  .fcard p{font-size:13px;color:var(--mut)}
+  .shop-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+  .controls{display:flex;gap:10px;flex-wrap:wrap}
+  select,input{background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:11px;padding:11px 13px;font-size:13.5px;font-family:inherit;outline:none}
+  select:focus,input:focus{border-color:var(--navy)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+  .p{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow);transition:.18s}
+  .p:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(20,40,80,.12)}
+  .p .img{aspect-ratio:4/3;background:linear-gradient(135deg,var(--navySoft),#f7f9ff);display:flex;align-items:center;justify-content:center;font-size:58px;position:relative}
+  .p .img img{width:100%;height:100%;object-fit:cover}
+  .tag{position:absolute;top:10px;font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:7px}
+  .tag.save{left:10px;background:var(--amber);color:#3a2a00}
+  .tag.sold{right:10px;background:var(--red);color:#fff}
+  .p .body{padding:16px;display:flex;flex-direction:column;gap:9px;flex:1}
+  .p h3{font-size:16px;letter-spacing:-.3px}
+  .meta{display:flex;gap:7px;flex-wrap:wrap;font-size:11.5px;color:var(--mut)}
+  .meta span{background:var(--bg);border:1px solid var(--line);padding:3px 8px;border-radius:7px;font-weight:500}
+  .bat{color:var(--green);font-weight:700}
+  .price{display:flex;align-items:baseline;gap:9px;margin-top:2px}
+  .price .now{font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--navy)}
+  .price .was{font-size:13px;color:var(--mut);text-decoration:line-through}
+  .p .act{margin-top:auto;padding-top:5px}
+  .p .act .btn{width:100%;justify-content:center}
+  .empty{grid-column:1/-1;text-align:center;padding:50px;color:var(--mut)}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .step{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:26px;text-align:center;box-shadow:var(--shadow)}
+  .step .n{width:40px;height:40px;border-radius:12px;background:var(--navy);color:#fff;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+  .step h3{font-size:16px;margin-bottom:5px}.step p{font-size:13.5px;color:var(--mut)}
+  .sell{background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:24px;padding:44px;text-align:center;color:#fff;box-shadow:0 20px 50px rgba(11,61,107,.3)}
+  .sell h2{font-size:29px;letter-spacing:-.8px;margin-bottom:8px}
+  .sell p{opacity:.92;font-size:15px;max-width:520px;margin:0 auto 22px}
+  .tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .tc{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:var(--shadow)}
+  .tc .stars{color:var(--amber);font-size:15px;margin-bottom:10px}.tc p{font-size:14px;margin-bottom:14px}
+  .tc .who{display:flex;align-items:center;gap:11px}
+  .tc .av{width:38px;height:38px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+  .tc .who b{font-size:13.5px;display:block}.tc .who small{font-size:11.5px;color:var(--mut)}
+  .faqwrap{max-width:720px;margin:0 auto}
+  details{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:11px;box-shadow:var(--shadow)}
+  summary{font-weight:600;cursor:pointer;font-size:14.5px;list-style:none;display:flex;justify-content:space-between}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:'+';color:var(--orange);font-weight:800}
+  details[open] summary::after{content:'−'}
+  details p{color:var(--mut);font-size:13.5px;margin-top:11px}
+  footer{background:var(--ink);color:#c9d2e2;padding:46px 0 28px;margin-top:40px}
+  .fgrid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:34px;margin-bottom:30px}
+  footer h4{color:#fff;font-size:14px;margin-bottom:12px}
+  footer p,footer a{font-size:13.5px;color:#9aa6c0;display:block;margin-bottom:8px}
+  footer a:hover{color:#fff}
+  .fbtns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .fbot{border-top:1px solid #26324c;padding-top:20px;text-align:center;font-size:12.5px;color:#7d87a4}
+  .adminbtn{position:fixed;right:18px;bottom:18px;z-index:50;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:13px 20px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 10px 30px rgba(11,61,107,.4)}
+  .modal{position:fixed;inset:0;background:rgba(10,20,45,.55);display:none;align-items:flex-start;justify-content:center;padding:20px;z-index:100;overflow:auto;backdrop-filter:blur(3px)}
+  .modal.on{display:flex}
+  .sheet{background:var(--surface);border-radius:20px;max-width:680px;width:100%;padding:26px;margin:auto;box-shadow:0 30px 70px rgba(0,0,0,.3)}
+  .sheet h2{font-size:21px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+  .x{cursor:pointer;color:var(--mut);font-size:26px;background:none;border:none;line-height:1}
+  .field{margin-bottom:13px}
+  .field label{display:block;font-size:12px;color:var(--mut);margin-bottom:5px;font-weight:600}
+  .field input,.field select{width:100%}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .adlist{margin-top:11px;max-height:320px;overflow:auto}
+  .adrow{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:11px;margin-bottom:8px;font-size:13px}
+  .adrow .th{width:46px;height:46px;border-radius:8px;background:var(--navySoft);display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;flex-shrink:0}
+  .adrow .th img{width:100%;height:100%;object-fit:cover}
+  .adrow .gi{flex:1;min-width:0}
+  .mini{padding:7px 11px;font-size:12px}
+  .note{background:var(--navySoft);border:1px solid #d4e2f3;border-radius:12px;padding:13px;font-size:12.5px;color:var(--navy);margin:8px 0 16px}
+  hr{border:none;border-top:1px solid var(--line);margin:20px 0}
+  .photobtn{font-size:11px;padding:6px 9px;border-radius:8px;background:var(--orangeSoft);color:var(--orange);border:none;cursor:pointer;font-weight:600}
+  @media(max-width:860px){.hero-grid{grid-template-columns:1fr}.feat{grid-template-columns:1fr 1fr}.hero h1{font-size:32px}.fgrid{grid-template-columns:1fr}}
+  @media(max-width:560px){.stats{grid-template-columns:1fr}.steps,.tgrid{grid-template-columns:1fr}.feat{grid-template-columns:1fr 1fr}.sell{padding:30px 20px}.hero h1{font-size:28px}.row2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="cfgwarn" id="cfgWarn" style="display:none">⚠️ Supabase not configured yet — open this file and paste your Project URL and anon key near the top (STEP A).</div>
+
+<header>
+  <div class="wrap bar">
+    <img src="logo.png" alt="ShopnoPurON" class="brandlogo" onerror="this.outerHTML='&lt;div class=\'logotext\'&gt;Shopno&lt;span&gt;PurON&lt;/span&gt;&lt;/div&gt;'">
+    <span class="badge">VERIFIED</span>
+    <span class="open"><span class="dot"></span>Open Now</span>
+    <div class="spacer"></div>
+    <a class="btn btn-call" id="hdrCall">Call</a>
+    <a class="btn btn-wa" id="hdrWa">WhatsApp</a>
+  </div>
+</header>
+
+<section class="hero wrap">
+  <div class="hero-grid">
+    <div>
+      <h1>Certified <em>pre-owned phones</em> you can actually trust.</h1>
+      <p class="lead">Every device passes a 32-point inspection, comes with a 7-day warranty and an original bill — and you test it in-store before you pay. Good quality at a lower price.</p>
+      <div class="pills"><span class="pill"><b>32-point</b> inspection</span><span class="pill"><b>7-day</b> warranty</span><span class="pill"><b>Original</b> bill</span><span class="pill"><b>In-store</b> testing</span></div>
+      <div class="cta"><a class="btn btn-brand" href="#shop">Browse Phones</a><a class="btn btn-ghost" id="heroCall">📞 Call Us</a></div>
+    </div>
+    <div class="hero-card">
+      <div class="big">✅ Our promise on every phone</div>
+      <div class="checklist">
+        <div class="check"><span class="ck">✓</span><div>Full diagnostic report<small>Battery, camera, screen, speakers — tested & graded.</small></div></div>
+        <div class="check"><span class="ck">✓</span><div>Genuine parts only<small>No duplicate displays or batteries, ever.</small></div></div>
+        <div class="check"><span class="ck">✓</span><div>Bill & ID verified<small>Clean ownership history on every device.</small></div></div>
+        <div class="check"><span class="ck">✓</span><div>7-day replacement<small>Hardware or software fault? We fix or replace.</small></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap"><div class="stats">
+  <div class="stat"><div class="num">2,500+</div><div class="lbl">Happy Customers</div></div>
+  <div class="stat"><div class="num">4.8★</div><div class="lbl">Google Rating</div></div>
+  <div class="stat"><div class="num">Since 2019</div><div class="lbl">Trusted Locally</div></div>
+</div></section>
+
+<section class="sec wrap">
+  <div class="sec-head"><div class="sectitle">Why ShopnoPurON</div><h2>Buy used, without the worry</h2><p>The checks a trustworthy shop should run — on every single phone.</p></div>
+  <div class="feat">
+    <div class="fcard"><div class="ic">🔍</div><h3>Quality Inspection</h3><p>A 32-point check covering every component.</p></div>
+    <div class="fcard"><div class="ic">🛡️</div><h3>7-Day Warranty</h3><p>Covers hardware and software faults.</p></div>
+    <div class="fcard"><div class="ic">⚙️</div><h3>Genuine Parts</h3><p>Original components, verified — no fakes.</p></div>
+    <div class="fcard"><div class="ic">🧾</div><h3>Bill & ID Verified</h3><p>Original bill and clean ownership history.</p></div>
+  </div>
+</section>
+
+<section class="sec wrap" id="shop">
+  <div class="shop-top">
+    <div><div class="sectitle">In Stock</div><h2 style="font-size:28px;letter-spacing:-.6px">Available Phones</h2></div>
+    <div class="controls">
+      <input id="search" placeholder="🔎 Search model…" style="min-width:150px">
+      <select id="sortSel"><option value="feat">Featured</option><option value="plh">Price: Low → High</option><option value="phl">Price: High → Low</option><option value="bat">Best Battery</option><option value="save">Biggest Saving</option></select>
+      <button class="btn btn-ghost" id="resetBtn">Reset</button>
+    </div>
+  </div>
+  <div class="grid" id="grid"><div class="empty">Loading phones…</div></div>
+</section>
+
+<section class="sec wrap"><div class="sell">
+  <h2>Selling or exchanging your phone?</h2>
+  <p>Send us your model and its condition on WhatsApp — we'll quote a fair price within 10 minutes, and pay you the same day.</p>
+  <a class="btn btn-brand" id="sellWa">Get My Price →</a>
+</div></section>
+
+<section class="sec wrap">
+  <div class="sec-head"><div class="sectitle">Simple Process</div><h2>How it works</h2></div>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><h3>Choose a phone</h3><p>Browse our verified in-stock listings.</p></div>
+    <div class="step"><div class="n">2</div><h3>Book on WhatsApp</h3><p>Tap to reserve — we hold it for you.</p></div>
+    <div class="step"><div class="n">3</div><h3>Test & buy in-store</h3><p>Inspect it yourself, then pay by cash, UPI, card or EMI.</p></div>
+  </div>
+</section>
+
+<section class="sec wrap">
+  <div class="sec-head"><div class="sectitle">Testimonials</div><h2>Loved by local buyers</h2></div>
+  <div class="tgrid">
+    <div class="tc"><div class="stars">★★★★★</div><p>"Got an iPhone 12 at a great price. Battery health was exactly as listed and the bill was genuine."</p><div class="who"><div class="av">R</div><div><b>Rahul S.</b><small>Verified buyer</small></div></div></div>
+    <div class="tc"><div class="stars">★★★★★</div><p>"They let me test everything in-store before paying. Totally transparent. This is how it should be done."</p><div class="who"><div class="av">P</div><div><b>Priya M.</b><small>Verified buyer</small></div></div></div>
+    <div class="tc"><div class="stars">★★★★★</div><p>"Sold my old Samsung here. Fair quote on WhatsApp and cash the same day. Smooth and honest."</p><div class="who"><div class="av">A</div><div><b>Arjun K.</b><small>Verified seller</small></div></div></div>
+  </div>
+</section>
+
+<section class="sec wrap">
+  <div class="sec-head"><div class="sectitle">FAQ</div><h2>Questions, answered</h2></div>
+  <div class="faqwrap">
+    <details><summary>Do I get a bill?</summary><p>Yes — every phone comes with an original bill.</p></details>
+    <details><summary>What does the warranty cover?</summary><p>The 7-day warranty covers hardware and software faults. Physical damage (drops, water) is not covered.</p></details>
+    <details><summary>Can I test before buying?</summary><p>Absolutely. Test the phone fully in-store and only pay once you're satisfied.</p></details>
+    <details><summary>What payment methods do you accept?</summary><p>Cash, UPI and card — with EMI available on select phones.</p></details>
+  </div>
+</section>
+
+<footer><div class="wrap">
+  <div class="fgrid">
+    <div>
+      <img src="logo.png" alt="ShopnoPurON" style="height:46px;margin-bottom:12px" onerror="this.style.display='none'">
+      <p>Certified pre-owned smartphones — inspected, warrantied and honestly priced.</p>
+      <p style="font-size:12px;opacity:.7">Prices may change • Stock is limited</p>
+      <div class="fbtns"><a class="btn" id="footCall" style="background:rgba(255,255,255,.1);color:#fff">📞 Call</a><a class="btn btn-wa" id="footWa">WhatsApp Us</a></div>
+    </div>
+    <div><h4>Our Store</h4><a id="footAddr">📍 Address coming soon</a><a>🕙 Mon–Sun, 10 AM – 9 PM</a></div>
+    <div><h4>Quick Links</h4><a href="#shop">Available Phones</a><a href="#">Sell / Exchange</a><a href="#">How It Works</a></div>
+  </div>
+  <div class="fbot">© <span id="yr"></span> ShopnoPurON · Good Quality at Lower Price</div>
+</div></footer>
+
+<button class="adminbtn" id="adminBtn">⚙️ Admin</button>
+
+<div class="modal" id="adminModal"><div class="sheet">
+  <h2>Admin Panel <button class="x" onclick="closeM('adminModal')">×</button></h2>
+  <div id="adminBody"></div>
+</div></div>
+
+<input type="file" id="hiddenPhoto" accept="image/*" style="display:none">
+
+<script>
+const BUCKET='phone-photos';
+const defaults={wa:'910000000000',phone:'+910000000000',addr:''};
+let sb=null, phones=[], settings={...defaults}, session=null;
+
+const configured = SUPABASE_URL.startsWith('http') && SUPABASE_ANON.length>20;
+if(!configured){ document.getElementById('cfgWarn').style.display='block'; }
+else { sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON); }
+document.getElementById('yr').textContent=new Date().getFullYear();
+
+function money(n){return '₹'+Number(n||0).toLocaleString('en-IN')}
+function waLink(t){return 'https://wa.me/'+settings.wa+'?text='+encodeURIComponent(t)}
+function telLink(){return 'tel:'+settings.phone}
+function refreshLinks(){
+  const w=waLink("Hi ShopnoPurON, I'd like to know more about a phone.");
+  ['hdrWa','footWa'].forEach(id=>document.getElementById(id).href=w);
+  ['hdrCall','heroCall','footCall'].forEach(id=>document.getElementById(id).href=telLink());
+  document.getElementById('sellWa').href=waLink("Hi, I'd like to sell/exchange my phone.\nModel: \nCondition: ");
+  document.getElementById('footAddr').textContent=settings.addr?('📍 '+settings.addr):'📍 Address coming soon';
+}
+
+/* ---------- storefront ---------- */
+function render(){
+  const q=document.getElementById('search').value.toLowerCase();
+  const sort=document.getElementById('sortSel').value;
+  let list=phones.filter(p=>((p.model||'')+' '+(p.color||'')).toLowerCase().includes(q));
+  if(sort==='plh')list.sort((a,b)=>a.price-b.price);
+  else if(sort==='phl')list.sort((a,b)=>b.price-a.price);
+  else if(sort==='bat')list.sort((a,b)=>b.battery-a.battery);
+  else if(sort==='save')list.sort((a,b)=>((b.was||0)-b.price)-((a.was||0)-a.price));
+  else list.sort((a,b)=>(b.feat?1:0)-(a.feat?1:0));
+  const g=document.getElementById('grid');
+  if(!list.length){g.innerHTML='<div class="empty">No phones available right now.<br><br><a class="btn btn-wa" href="'+waLink("Hi, I'm looking for a specific phone model.")+'">Request a Phone</a></div>';return}
+  g.innerHTML=list.map(p=>{
+    const saving=p.was&&p.was>p.price?('<span class="tag save">Save '+money(p.was-p.price)+'</span>'):'';
+    const sold=p.sold?'<span class="tag sold">SOLD</span>':'';
+    const img=p.img?('<img src="'+p.img+'" alt="'+p.model+'">'):'📱';
+    const msg="Hi ShopnoPurON, I'd like to reserve this phone:\n"+p.model+' '+(p.storage||'')+' ('+(p.color||'')+')\nPrice: '+money(p.price);
+    const act=p.sold?'<button class="btn btn-ghost" disabled style="opacity:.5">Sold Out</button>':'<a class="btn btn-wa" href="'+waLink(msg)+'">Reserve on WhatsApp</a>';
+    return '<div class="p"><div class="img">'+saving+sold+img+'</div><div class="body">'+
+      '<h3>'+p.model+'</h3><div class="meta"><span>'+(p.storage||'—')+'</span><span>'+(p.color||'—')+'</span><span class="bat">🔋 '+(p.battery||'—')+'%</span><span>'+(p.cond||'')+'</span></div>'+
+      '<div class="price"><span class="now">'+money(p.price)+'</span>'+(p.was?'<span class="was">'+money(p.was)+'</span>':'')+'</div>'+
+      '<div class="act">'+act+'</div></div></div>';
+  }).join('');
+}
+document.getElementById('search').addEventListener('input',render);
+document.getElementById('sortSel').addEventListener('change',render);
+document.getElementById('resetBtn').addEventListener('click',()=>{document.getElementById('search').value='';document.getElementById('sortSel').value='feat';render()});
+
+/* ---------- data load ---------- */
+async function loadAll(){
+  if(!sb){document.getElementById('grid').innerHTML='<div class="empty">Store not configured yet.</div>';return}
+  const {data:ph}=await sb.from('phones').select('*').order('id',{ascending:false});
+  phones=ph||[];
+  const {data:st}=await sb.from('settings').select('*').eq('id',1).maybeSingle();
+  if(st)settings=Object.assign({},defaults,{wa:st.wa,phone:st.phone,addr:st.addr});
+  refreshLinks();render();
+}
+function liveUpdates(){
+  if(!sb)return;
+  sb.channel('shop').on('postgres_changes',{event:'*',schema:'public',table:'phones'},loadAll)
+                    .on('postgres_changes',{event:'*',schema:'public',table:'settings'},loadAll).subscribe();
+}
+
+/* ---------- modal ---------- */
+function openM(id){document.getElementById(id).classList.add('on')}
+function closeM(id){document.getElementById(id).classList.remove('on')}
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('on')}));
+
+/* ---------- admin ---------- */
+document.getElementById('adminBtn').addEventListener('click',async()=>{
+  if(!sb){alert('Add your Supabase URL and key in the file first (STEP A).');return}
+  const {data}=await sb.auth.getSession();session=data.session;
+  session?renderAdmin():renderLogin();
+  openM('adminModal');
+});
+function renderLogin(){
+  document.getElementById('adminBody').innerHTML=
+   '<div class="note">🔒 Owner login. Use the email & password you created in Supabase → Authentication.</div>'+
+   '<div class="field"><label>Email</label><input id="liEmail" type="email" placeholder="you@email.com"></div>'+
+   '<div class="field"><label>Password</label><input id="liPass" type="password" placeholder="••••••••"></div>'+
+   '<button class="btn btn-navy" id="loginBtn">Log in</button>';
+  document.getElementById('loginBtn').onclick=async()=>{
+    const email=document.getElementById('liEmail').value.trim();
+    const password=document.getElementById('liPass').value;
+    const {data,error}=await sb.auth.signInWithPassword({email,password});
+    if(error){alert('Login failed: '+error.message);return}
+    session=data.session;renderAdmin();
+  };
+}
+function renderAdmin(){
+  document.getElementById('adminBody').innerHTML=
+   '<div class="note">💾 Changes save to your database and go live for every visitor instantly.</div>'+
+   '<div style="text-align:right;margin-bottom:8px"><button class="btn btn-ghost mini" id="logoutBtn">Log out</button></div>'+
+   '<h3 style="font-size:15px;margin-bottom:10px">⚙️ Store Settings</h3>'+
+   '<div class="row2"><div class="field"><label>WhatsApp number (country code, no +)</label><input id="sWa" value="'+settings.wa+'"></div>'+
+   '<div class="field"><label>Call number</label><input id="sPhone" value="'+settings.phone+'"></div></div>'+
+   '<div class="field"><label>Store address</label><input id="sAddr" value="'+(settings.addr||'')+'"></div>'+
+   '<button class="btn btn-navy mini" id="saveSet">Save Settings</button>'+
+   '<hr><h3 style="font-size:15px;margin-bottom:10px">➕ Add a phone</h3>'+
+   '<div class="row2"><div class="field"><label>Model</label><input id="fModel" placeholder="iPhone 13"></div><div class="field"><label>Storage</label><input id="fStorage" placeholder="128GB"></div></div>'+
+   '<div class="row2"><div class="field"><label>Color</label><input id="fColor" placeholder="Black"></div><div class="field"><label>Battery %</label><input id="fBat" type="number" placeholder="90"></div></div>'+
+   '<div class="row2"><div class="field"><label>Condition</label><select id="fCond"><option>Like New</option><option>Excellent</option><option>Good</option></select></div><div class="field"><label>Price ₹</label><input id="fPrice" type="number" placeholder="35000"></div></div>'+
+   '<div class="row2"><div class="field"><label>Original price ₹ (optional)</label><input id="fWas" type="number" placeholder="45000"></div><div class="field"><label>&nbsp;</label><label style="font-size:12.5px;color:var(--mut);font-weight:500"><input type="checkbox" id="fFeat" style="width:auto"> Featured</label></div></div>'+
+   '<button class="btn btn-brand mini" id="addP">Add Phone</button>'+
+   '<div style="font-size:11.5px;color:var(--mut);margin-top:6px">After adding, tap 📷 in the list to upload its photo.</div>'+
+   '<hr><h3 style="font-size:15px;margin-bottom:10px">📋 Current stock ('+phones.length+')</h3><div class="adlist" id="adlist"></div>';
+  document.getElementById('logoutBtn').onclick=async()=>{await sb.auth.signOut();session=null;renderLogin();};
+  document.getElementById('saveSet').onclick=saveSettings;
+  document.getElementById('addP').onclick=addPhone;
+  renderAdlist();
+}
+function renderAdlist(){
+  const el=document.getElementById('adlist');
+  el.innerHTML=phones.map(p=>{
+    const th=p.img?('<img src="'+p.img+'">'):'📱';
+    return '<div class="adrow"><div class="th">'+th+'</div><div class="gi"><b>'+p.model+'</b> '+(p.storage||'')+' • '+money(p.price)+' • 🔋'+(p.battery||'—')+'%'+(p.sold?' • <span style="color:var(--red)">SOLD</span>':'')+'</div>'+
+      '<button class="photobtn" data-ph="'+p.id+'">📷</button>'+
+      '<button class="btn btn-ghost mini" data-sold="'+p.id+'">'+(p.sold?'Un-sold':'Sold')+'</button>'+
+      '<button class="btn btn-ghost mini" style="color:var(--red)" data-del="'+p.id+'">Del</button></div>';
+  }).join('')||'<div style="color:var(--mut);font-size:13px">No phones yet.</div>';
+  el.querySelectorAll('[data-sold]').forEach(b=>b.onclick=()=>toggleSold(+b.dataset.sold));
+  el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>delPhone(+b.dataset.del));
+  el.querySelectorAll('[data-ph]').forEach(b=>b.onclick=()=>pickPhoto(+b.dataset.ph));
+}
+async function saveSettings(){
+  settings.wa=document.getElementById('sWa').value.trim()||defaults.wa;
+  settings.phone=document.getElementById('sPhone').value.trim()||defaults.phone;
+  settings.addr=document.getElementById('sAddr').value.trim();
+  const {error}=await sb.from('settings').update({wa:settings.wa,phone:settings.phone,addr:settings.addr}).eq('id',1);
+  if(error){alert('Save failed: '+error.message);return}
+  refreshLinks();alert('Settings saved ✓');
+}
+async function addPhone(){
+  const model=document.getElementById('fModel').value.trim();
+  if(!model){alert('Please enter a model');return}
+  const row={model,storage:document.getElementById('fStorage').value.trim(),color:document.getElementById('fColor').value.trim(),
+    battery:+document.getElementById('fBat').value||null,cond:document.getElementById('fCond').value,
+    price:+document.getElementById('fPrice').value||0,was:+document.getElementById('fWas').value||null,
+    img:'',sold:false,feat:document.getElementById('fFeat').checked};
+  const {error}=await sb.from('phones').insert(row);
+  if(error){alert('Add failed: '+error.message);return}
+  await loadAll();renderAdmin();
+}
+async function toggleSold(id){
+  const p=phones.find(x=>x.id===id);if(!p)return;
+  const {error}=await sb.from('phones').update({sold:!p.sold}).eq('id',id);
+  if(error){alert(error.message);return}
+  await loadAll();renderAdlist();
+}
+async function delPhone(id){
+  if(!confirm('Delete this phone?'))return;
+  const {error}=await sb.from('phones').delete().eq('id',id);
+  if(error){alert(error.message);return}
+  await loadAll();renderAdmin();
+}
+
+/* ---------- photo upload ---------- */
+let pendingId=null;const hp=document.getElementById('hiddenPhoto');
+function pickPhoto(id){pendingId=id;hp.value='';hp.click();}
+hp.addEventListener('change',async()=>{
+  const f=hp.files&&hp.files[0];if(!f||pendingId==null)return;
+  const btn=document.querySelector('[data-ph="'+pendingId+'"]');if(btn)btn.textContent='⏳';
+  try{
+    const path=pendingId+'_'+Date.now()+'_'+f.name.replace(/[^a-zA-Z0-9.]/g,'');
+    const {error:upErr}=await sb.storage.from(BUCKET).upload(path,f,{upsert:true});
+    if(upErr)throw upErr;
+    const {data}=sb.storage.from(BUCKET).getPublicUrl(path);
+    const {error}=await sb.from('phones').update({img:data.publicUrl}).eq('id',pendingId);
+    if(error)throw error;
+    await loadAll();renderAdlist();
+  }catch(e){alert('Upload failed: '+(e.message||e));if(btn)btn.textContent='📷';}
+  pendingId=null;
+});
+
+/* ---------- init ---------- */
+refreshLinks();
+if(sb){loadAll();liveUpdates();}
+</script>
+</body>
+</html>
